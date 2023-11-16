@@ -1,10 +1,10 @@
 databaseChangeLog:
   - changeSet:
-      id: create-app_user-table
+      id: create-chat_messages-table
       author: Oleh
       changes:
         - createTable:
-            tableName: app_user
+            tableName: chat_messages
             columns:
               - column:
                   name: id
@@ -13,29 +13,28 @@ databaseChangeLog:
                   constraints:
                     primaryKey: true
               - column:
-                  name: telegram_user_id
+                  name: message
+                  type: TEXT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: message_time
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: message_author
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: chat_id
                   type: BIGINT
                   constraints:
                     nullable: false
               - column:
-                  name: first_name
-                  type: VARCHAR(255)
-              - column:
-                  name: last_name
-                  type: VARCHAR(255)
-              - column:
-                  name: password
-                  type: VARCHAR(255)
-              - column:
-                  name: username
-                  type: VARCHAR(255)
+                  name: user_id
+                  type: BIGINT
                   constraints:
-                    nullable: false
-              - column:
-                  name: refresh_token
-                  type: VARCHAR(255)
-              - column:
-                  name: role
-                  type: VARCHAR(255)
-                  constraints:
-                    nullable: false
+                    foreignKeyName: FK_user
+                    references: app_users(id)

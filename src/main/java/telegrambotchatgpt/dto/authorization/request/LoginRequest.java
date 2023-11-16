@@ -1,4 +1,4 @@
-package telegrambotchatgpt.dto.authorization;
+package telegrambotchatgpt.dto.authorization.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AuthenticationRequest {
+public class LoginRequest {
 
     private String username;
 

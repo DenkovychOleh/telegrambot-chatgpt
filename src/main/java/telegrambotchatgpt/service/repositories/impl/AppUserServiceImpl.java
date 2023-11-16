@@ -1,6 +1,7 @@
 package telegrambotchatgpt.service.repositories.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.telegram.telegrambots.meta.api.objects.User;
@@ -33,6 +34,11 @@ public class AppUserServiceImpl implements AppUserService {
                 .orElseGet(() -> saveAppUserFromTelegramUser(telegramUser));
     }
 
+    @Override
+    public AppUser getAuthenticatedAppUser() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        return findByUsername(username);
+    }
 
     private AppUser saveAppUserFromTelegramUser(User user) {
         AppUser appUser = AppUser.builder()

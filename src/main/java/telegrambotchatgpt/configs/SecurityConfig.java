@@ -35,9 +35,8 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(matcherRegistry ->
                         matcherRegistry
-                                .requestMatchers("/bot/chat**").permitAll()
                                 .requestMatchers("/api/v1/authorization/**").permitAll()
-                                .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+                                .requestMatchers("/api/v1/admin/**").hasAnyAuthority("ADMIN")
                                 .anyRequest().authenticated()
                 )
                 .logout(logoutConfigurer -> logoutConfigurer

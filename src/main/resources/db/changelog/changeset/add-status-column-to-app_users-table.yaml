@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: add-status-column-to-app_users-table
+      author: Oleh
+      changes:
+        - addColumn:
+            tableName: app_users
+            columns:
+              - column:
+                  name: status
+                  type: VARCHAR(255)
+                  defaultValue: 'INACTIVE'
+                  constraints:
+                    nullable: false

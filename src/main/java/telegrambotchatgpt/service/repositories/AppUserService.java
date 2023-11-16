@@ -1,5 +1,6 @@
 package telegrambotchatgpt.service.repositories;
 
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.telegram.telegrambots.meta.api.objects.User;
 import telegrambotchatgpt.entities.AppUser;
 
@@ -9,4 +10,6 @@ public interface AppUserService {
     void save(AppUser appUser);
 
     AppUser findOrSaveAppUser(User telegranUser);
+
+    AppUser getAuthenticatedAppUser();
 }

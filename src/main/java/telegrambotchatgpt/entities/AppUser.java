@@ -3,12 +3,10 @@ package telegrambotchatgpt.entities;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -20,7 +18,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "app_user")
+@Table(name = "app_users")
 public class AppUser implements UserDetails {
 
     @Id
@@ -50,6 +48,14 @@ public class AppUser implements UserDetails {
     @Column(name = "role", nullable = false)
     private Roles role;
 
+    @Column(insertable = false, name = "status", nullable = false, columnDefinition = "VARCHAR(255) DEFAULT 'INACTIVE'")
+    @Enumerated(EnumType.STRING)
+    private Status status;
+
+    public enum Status {
+        ACTIVE, PENDING, INACTIVE
+    }
+
     public enum Roles {
         USER, ADMIN
     }
@@ -60,10 +66,9 @@ public class AppUser implements UserDetails {
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         List<GrantedAuthority> authorities = new ArrayList<>();
-        authorities.add(new SimpleGrantedAuthority(getRole().name()));
+        authorities.add(new SimpleGrantedAuthority(role.name()));
         return authorities;
     }
-
     @Override
     public boolean isAccountNonExpired() {
         return true;

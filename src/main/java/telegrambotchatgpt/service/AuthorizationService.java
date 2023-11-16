@@ -4,9 +4,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import telegrambotchatgpt.dto.authorization.AuthenticationRequest;
+import telegrambotchatgpt.dto.authorization.request.LoginRequest;
+import telegrambotchatgpt.dto.authorization.request.RegistrationRequest;
 import telegrambotchatgpt.dto.jwt.AuthenticationResponse;
 import telegrambotchatgpt.entities.AppUser;
 import telegrambotchatgpt.exceptions.AuthorizationCustomException;
@@ -18,12 +20,13 @@ import telegrambotchatgpt.service.repositories.AppUserService;
 public class AuthorizationService {
 
     private final AppUserService appUserService;
+    private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
 
     @Transactional
-    public ResponseEntity<AuthenticationResponse> login(AuthenticationRequest authenticationRequest) {
-        AppUser appUser = authenticate(authenticationRequest);
+    public ResponseEntity<AuthenticationResponse> login(LoginRequest loginRequest) {
+        AppUser appUser = authenticate(loginRequest);
         String jwtToken = jwtService.generateToken(appUser);
         String refreshToken = jwtService.generateRefreshToken(appUser);
         appUser.setRefreshToken(refreshToken);
@@ -37,18 +40,33 @@ public class AuthorizationService {
     }
 
 
-    protected AppUser authenticate(AuthenticationRequest authenticationRequest) {
-        AppUser appUser = appUserService.findByUsername(authenticationRequest.getUsername());
+    protected AppUser authenticate(LoginRequest loginRequest) {
+        AppUser appUser = appUserService.findByUsername(loginRequest.getUsername());
         try {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
-                            authenticationRequest.getUsername(),
-                            authenticationRequest.getPassword()
+                            loginRequest.getUsername(),
+                            loginRequest.getPassword()
                     )
             );
             return appUser;
         } catch (Exception e) {
             throw new AuthorizationCustomException();
         }
+    }
+
+    @Transactional
+    public ResponseEntity<String> register(RegistrationRequest registrationRequest) {
+        AppUser appUser = validateRegistrationRequest(registrationRequest);
+        appUser.setPassword(passwordEncoder.encode(registrationRequest.getPassword()));
+        return ResponseEntity.ok("User has been registered. You can log in!");
+    }
+
+    private AppUser validateRegistrationRequest(RegistrationRequest registrationRequest) {
+        AppUser appUser = appUserService.findByUsername(registrationRequest.getUsername());
+        if (appUser.getPassword() != null) {
+            throw new AuthorizationCustomException("A user with this username is already registered");
+        }
+        return appUser;
     }
 }
