@@ -33,8 +33,8 @@ public class AppUserServiceImpl implements AppUserService {
                 .orElseGet(() -> saveAppUserFromTelegramUser(telegramUser));
     }
 
-    @Override
-    public AppUser saveAppUserFromTelegramUser(User user) {
+
+    private AppUser saveAppUserFromTelegramUser(User user) {
         AppUser appUser = AppUser.builder()
                 .telegramUserId(user.getId())
                 .firstName(user.getFirstName())

@@ -54,6 +54,9 @@ public class AppUser implements UserDetails {
         USER, ADMIN
     }
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<ChatMessage> chatMessages;
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         List<GrantedAuthority> authorities = new ArrayList<>();

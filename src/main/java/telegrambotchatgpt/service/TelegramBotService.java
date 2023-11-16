@@ -5,12 +5,16 @@ import lombok.extern.log4j.Log4j;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.Chat;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import telegrambotchatgpt.configs.BotConfig;
 import telegrambotchatgpt.entities.AppUser;
 import telegrambotchatgpt.service.repositories.AppUserService;
+import telegrambotchatgpt.service.repositories.ChatMessageService;
+
+import java.time.*;
 
 @Log4j
 @RequiredArgsConstructor
@@ -19,9 +23,10 @@ public class TelegramBotService extends TelegramLongPollingBot {
 
     private final BotConfig config;
 
-    private final AppUserService appUserService;
-
     private final OpenAIService openAIService;
+
+    private final ChatMessageService chatMessageService;
+
 
     @Override
     public String getBotUsername() {
@@ -59,12 +64,13 @@ public class TelegramBotService extends TelegramLongPollingBot {
     }
 
     public void processTextMessage(Update update) {
-        User telegramUser = update.getMessage().getFrom();
-        AppUser appUser = appUserService.findOrSaveAppUser(telegramUser);
-
         Long chatId = update.getMessage().getChatId();
+
+        chatMessageService.saveChatMessage(update.getMessage());
+
         String textMessage = update.getMessage().getText();
         String gptResponse = openAIService.getGptResponse(textMessage);
+        chatMessageService.saveGptResponseMessage(chatId, gptResponse);
 
         sendMassage(chatId, gptResponse);
     }

@@ -8,7 +8,5 @@ public interface AppUserService {
 
     void save(AppUser appUser);
 
-    AppUser saveAppUserFromTelegramUser(User telegranUser);
-
     AppUser findOrSaveAppUser(User telegranUser);
 }
