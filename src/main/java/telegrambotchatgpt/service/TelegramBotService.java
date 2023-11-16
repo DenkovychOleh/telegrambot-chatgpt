@@ -8,7 +8,9 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-import telegrambotchatgpt.config.BotConfig;
+import telegrambotchatgpt.configs.BotConfig;
+import telegrambotchatgpt.entities.AppUser;
+import telegrambotchatgpt.service.repositories.AppUserService;
 
 @Log4j
 @RequiredArgsConstructor
@@ -16,6 +18,10 @@ import telegrambotchatgpt.config.BotConfig;
 public class TelegramBotService extends TelegramLongPollingBot {
 
     private final BotConfig config;
+
+    private final AppUserService appUserService;
+
+    private final OpenAIService openAIService;
 
     @Override
     public String getBotUsername() {
@@ -53,17 +59,14 @@ public class TelegramBotService extends TelegramLongPollingBot {
     }
 
     public void processTextMessage(Update update) {
-//        AppUser appUser = findOrSaveAppUser(update);
-        String text = update.getMessage().getText();
-        Long chatId = update.getMessage().getChatId();
-
         User telegramUser = update.getMessage().getFrom();
-        Long telegramUserId = telegramUser.getId();
-        String userName = telegramUser.getUserName();
+        AppUser appUser = appUserService.findOrSaveAppUser(telegramUser);
 
+        Long chatId = update.getMessage().getChatId();
+        String textMessage = update.getMessage().getText();
+        String gptResponse = openAIService.getGptResponse(textMessage);
 
-        String output = "Hello, " + userName;
-        sendMassage(chatId, output);
+        sendMassage(chatId, gptResponse);
     }
 
 }

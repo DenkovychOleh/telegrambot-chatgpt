@@ -1,4 +1,4 @@
-package telegrambotchatgpt.config;
+package telegrambotchatgpt.configs;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j;
