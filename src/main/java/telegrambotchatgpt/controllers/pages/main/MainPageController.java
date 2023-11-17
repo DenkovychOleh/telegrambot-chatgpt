@@ -16,13 +16,8 @@ public class MainPageController {
 
     private final AppUserService appUserService;
 
-    @GetMapping()
-    public ResponseEntity<String> openSecurePage() {
-        return ResponseEntity.ok("Hello from secure page");
-    }
-
     @GetMapping("/my-role")
-    public ResponseEntity<String> getRole() {
+    public ResponseEntity<String> getAuthorizedAppUserRole() {
         return ResponseEntity.ok(appUserService.getAuthenticatedAppUser().getRole().name());
     }
 }
