@@ -15,8 +15,6 @@ public interface AppUserService {
 
     AppUser getAuthenticatedAppUser();
 
-    AppUser findByChatId(Long chatId);
-
     void updateRoleByUsername(String username, String newRole);
 
     List<AppUserDTO> getAppUserListByRole(String role);

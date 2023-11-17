@@ -10,6 +10,7 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import telegrambotchatgpt.configs.BotConfig;
 import telegrambotchatgpt.entities.AppUser;
+import telegrambotchatgpt.service.repositories.AppUserService;
 import telegrambotchatgpt.service.repositories.ChatMessageService;
 
 @Log4j
@@ -22,6 +23,9 @@ public class TelegramBotService extends TelegramLongPollingBot {
     private final OpenAIService openAIService;
 
     private final ChatMessageService chatMessageService;
+
+    private final AppUserService appUserService;
+
 
     @Value("${openai.model}")
     private String openaiModel;
@@ -46,6 +50,29 @@ public class TelegramBotService extends TelegramLongPollingBot {
         }
     }
 
+    public void processTextMessage(Update update) {
+        Long chatId = update.getMessage().getChatId();
+
+        AppUser appUser = appUserService.findOrSaveAppUser(update.getMessage().getFrom());
+
+        chatMessageService.saveChatMessage(update.getMessage(), appUser);
+        String textMessage = update.getMessage().getText();
+
+        String gptResponse = openAIService.getGptResponse(textMessage);
+        String author = openaiModel;
+
+        chatMessageService.saveGptResponseMessage(appUser, gptResponse, author);
+
+        sendMassage(chatId, gptResponse);
+    }
+
+    public void processTextMessageByAppUser(AppUser appUser, String author, String message) {
+        Long chatId = appUser.getTelegramUserId();
+        chatMessageService.saveGptResponseMessage(appUser, message, author);
+        sendMassage(chatId, message);
+    }
+
+
     private void executeMessage(SendMessage message) {
         try {
             execute(message);
@@ -61,28 +88,4 @@ public class TelegramBotService extends TelegramLongPollingBot {
         message.setText(textToSend);
         executeMessage(message);
     }
-
-    public void processTextMessage(Update update) {
-        Long chatId = update.getMessage().getChatId();
-
-        chatMessageService.saveChatMessage(update.getMessage());
-        String textMessage = update.getMessage().getText();
-
-        String gptResponse = openAIService.getGptResponse(textMessage);
-        String author = openaiModel;
-        chatMessageService.saveGptResponseMessage(chatId, gptResponse, author);
-
-        sendMassage(chatId, gptResponse);
-    }
-
-    public void processTextMessageByAppUser(AppUser appUser, String message) {
-        Long chatId = appUser.getTelegramUserId();
-        String author = "ChatGPT-Helper";
-        chatMessageService.saveGptResponseMessage(chatId, message, author);
-        sendMassage(chatId, message);
-    }
 }
-
-
-//    String message = String.format("Click the link to confirm password reset: %s", appUser.getRefreshToken());
-//        String author = String.format("[ADMIN] %S", admin.getUsername());

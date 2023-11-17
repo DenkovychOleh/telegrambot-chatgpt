@@ -13,13 +13,15 @@ import telegrambotchatgpt.dto.chatgpt.ChatGptResponse;
 @Service
 public class OpenAIService {
 
+    private final RestTemplate template;
+
+
     @Value("${openai.model}")
     private String model;
 
     @Value("${openai.api.url}")
     private String apiURL;
 
-    private final RestTemplate template;
 
     public String getGptResponse(String prompt) {
         ChatGptRequest request = new ChatGptRequest(model, prompt);

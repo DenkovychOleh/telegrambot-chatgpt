@@ -21,6 +21,7 @@ public class AppUserServiceImpl implements AppUserService {
 
     private final AppUserDAO appUserDAO;
 
+
     @Override
     public AppUser findByUsername(String username) {
         return appUserDAO.findByUsername(username)
@@ -30,6 +31,13 @@ public class AppUserServiceImpl implements AppUserService {
     @Override
     public void save(AppUser appUser) {
         appUserDAO.save(appUser);
+    }
+
+    @Override
+    public List<AppUser> findAllByRole(AppUser.Roles role) {
+        return appUserDAO.findAllByRole(role)
+                .filter(appUser -> !appUser.isEmpty())
+                .orElseThrow(() -> new DataNotFoundException("Users with " + role.name()));
     }
 
     @Transactional
@@ -43,12 +51,6 @@ public class AppUserServiceImpl implements AppUserService {
     public AppUser getAuthenticatedAppUser() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         return findByUsername(username);
-    }
-
-    @Override
-    public AppUser findByChatId(Long chatId) {
-        return appUserDAO.findByTelegramUserId(chatId)
-                .orElseThrow(() -> new DataNotFoundException("User with " + chatId));
     }
 
     @Transactional
@@ -80,6 +82,7 @@ public class AppUserServiceImpl implements AppUserService {
                 .collect(Collectors.toList());
     }
 
+
     private AppUser.Roles parseUserRole(String role) {
         try {
             return AppUser.Roles.valueOf(role.toUpperCase());
@@ -95,13 +98,6 @@ public class AppUserServiceImpl implements AppUserService {
                 .role(appUser.getRole().name())
                 .status(appUser.getStatus().name())
                 .build();
-    }
-
-    @Override
-    public List<AppUser> findAllByRole(AppUser.Roles role) {
-        return appUserDAO.findAllByRole(role)
-                .filter(appUser -> !appUser.isEmpty())
-                .orElseThrow(() -> new DataNotFoundException("Users with " + role.name()));
     }
 
     private AppUser saveAppUserFromTelegramUser(User user) {

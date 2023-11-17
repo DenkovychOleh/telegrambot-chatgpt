@@ -7,10 +7,11 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 import telegrambotchatgpt.dao.ChatMessageDAO;
 import telegrambotchatgpt.entities.AppUser;
 import telegrambotchatgpt.entities.ChatMessage;
-import telegrambotchatgpt.service.repositories.AppUserService;
 import telegrambotchatgpt.service.repositories.ChatMessageService;
 
-import java.time.*;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -21,8 +22,6 @@ public class ChatMessageServiceImpl implements ChatMessageService {
 
     private final ChatMessageDAO chatMessageDAO;
 
-    private final AppUserService appUserService;
-
 
     @Override
     public void save(ChatMessage chatMessage) {
@@ -30,12 +29,26 @@ public class ChatMessageServiceImpl implements ChatMessageService {
     }
 
     @Override
-    public String getChatByUsername(String username) {
-        AppUser appUser = appUserService.findByUsername(username);
+    public String getChatByAppUser(AppUser appUser) {
         Optional<List<ChatMessage>> chatMessageByAppUser = chatMessageDAO.findAllByUser(appUser);
         List<ChatMessage> chatMessages = chatMessageByAppUser.orElse(Collections.emptyList());
         return buildChatString(chatMessages);
     }
+
+    @Transactional
+    @Override
+    public void saveChatMessage(Message message, AppUser appUser) {
+        ChatMessage chatMessage = buildChatMessageFromMessage(message, appUser);
+        save(chatMessage);
+    }
+
+    @Transactional
+    @Override
+    public void saveGptResponseMessage(AppUser appUser, String message, String author) {
+        ChatMessage chatMessage = buildChatMessageFromGptResponseMessage(appUser, message, author);
+        save(chatMessage);
+    }
+
 
     private String buildChatString(List<ChatMessage> chatMessages) {
         StringBuilder stringBuilder = new StringBuilder();
@@ -44,22 +57,6 @@ public class ChatMessageServiceImpl implements ChatMessageService {
         );
         return stringBuilder.toString().isEmpty() ? "The chat is empty" : stringBuilder.toString();
     }
-
-    @Transactional
-    @Override
-    public void saveChatMessage(Message message) {
-        ChatMessage chatMessage = buildChatMessageFromMessage(message);
-        save(chatMessage);
-    }
-
-    @Transactional
-    @Override
-    public void saveGptResponseMessage(Long chatId, String message, String author) {
-        AppUser appUserByChatId = appUserService.findByChatId(chatId);
-        ChatMessage chatMessage = buildChatMessageFromGptResponseMessage(appUserByChatId, message, author);
-        save(chatMessage);
-    }
-
 
     private ChatMessage buildChatMessageFromGptResponseMessage(AppUser appUser, String message, String author) {
         return ChatMessage.builder()
@@ -70,17 +67,13 @@ public class ChatMessageServiceImpl implements ChatMessageService {
                 .build();
     }
 
-    private ChatMessage buildChatMessageFromMessage(Message message) {
+    private ChatMessage buildChatMessageFromMessage(Message message, AppUser appUser) {
         return ChatMessage.builder()
-                .user(getAppUserFromMessage(message))
+                .user(appUser)
                 .messageTime(getMessageTimeFromMessage(message))
-                .messageAuthor(getAppUserFromMessage(message).getUsername())
+                .messageAuthor(appUser.getUsername())
                 .message(message.getText())
                 .build();
-    }
-
-    private AppUser getAppUserFromMessage(Message message) {
-        return appUserService.findOrSaveAppUser(message.getFrom());
     }
 
     private LocalDateTime getMessageTimeFromMessage(Message message) {

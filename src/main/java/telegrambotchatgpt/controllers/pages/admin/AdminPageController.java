@@ -4,8 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import telegrambotchatgpt.dto.AppUserDTO;
-import telegrambotchatgpt.service.repositories.AppUserService;
-import telegrambotchatgpt.service.repositories.ChatMessageService;
+import telegrambotchatgpt.service.AdminPageService;
 
 import java.util.List;
 
@@ -15,8 +14,7 @@ import java.util.List;
 @RestController
 public class AdminPageController {
 
-    private final ChatMessageService chatMessageService;
-    private final AppUserService appUserService;
+    private final AdminPageService adminPageService;
 
     @GetMapping("/my-info")
     public ResponseEntity<String> openSecurePage() {
@@ -27,18 +25,22 @@ public class AdminPageController {
     public ResponseEntity<String> updateRole(
             @PathVariable(value = "username") String username,
             @PathVariable(value = "role") String newRole) {
-        appUserService.updateRoleByUsername(username, newRole);
-        return ResponseEntity.ok("User's role has been updated.");
+        return adminPageService.updateRoleByUsername(username, newRole);
     }
 
     @GetMapping("/chat/username/{username}")
     public ResponseEntity<String> getChatByUsername(@PathVariable(value = "username") String username) {
-        return ResponseEntity.ok(chatMessageService.getChatByUsername(username));
+        return adminPageService.getChatByUsername(username);
     }
 
     @GetMapping("/app-users")
     public ResponseEntity<List<AppUserDTO>> getAppUserList(@RequestParam(value = "role", required = false) String role) {
-        return ResponseEntity.ok(appUserService.getAppUserListByRole(role));
+        return adminPageService.getAppUserListByRole(role);
+    }
+
+    @PostMapping("/send-message/{username}")
+    public ResponseEntity<String> sendMessageToAppUser(@PathVariable(value = "username") String username, @RequestBody String message) {
+        return adminPageService.sendMessageToAppUserByUsername(username, message);
     }
 
 }

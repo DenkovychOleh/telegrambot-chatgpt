@@ -22,9 +22,13 @@ import telegrambotchatgpt.service.repositories.AppUserService;
 public class AuthorizationService {
 
     private final AppUserService appUserService;
+
     private final PasswordEncoder passwordEncoder;
+
     private final JwtService jwtService;
+
     private final AuthenticationManager authenticationManager;
+
     private final TelegramBotService telegramBotService;
 
 
@@ -33,6 +37,10 @@ public class AuthorizationService {
 
     @Value("${reset-password.url}")
     private String resetPasswordUrl;
+
+    @Value("${telegram.bot.title}")
+    private String botTitle;
+
 
     @Transactional
     public ResponseEntity<AuthenticationResponse> login(LoginRequest loginRequest) {
@@ -49,35 +57,11 @@ public class AuthorizationService {
         );
     }
 
-
-    protected AppUser authenticate(LoginRequest loginRequest) {
-        AppUser appUser = appUserService.findByUsername(loginRequest.getUsername());
-        try {
-            authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(
-                            loginRequest.getUsername(),
-                            loginRequest.getPassword()
-                    )
-            );
-            return appUser;
-        } catch (Exception e) {
-            throw new AuthorizationCustomException();
-        }
-    }
-
     @Transactional
     public ResponseEntity<String> register(RegistrationRequest registrationRequest) {
         AppUser appUser = validateRegistrationRequest(registrationRequest);
         appUser.setPassword(passwordEncoder.encode(registrationRequest.getPassword()));
         return ResponseEntity.ok("User has been registered. You can log in!");
-    }
-
-    private AppUser validateRegistrationRequest(RegistrationRequest registrationRequest) {
-        AppUser appUser = appUserService.findByUsername(registrationRequest.getUsername());
-        if (appUser.getPassword() != null) {
-            throw new AuthorizationCustomException("A user with this username is already registered");
-        }
-        return appUser;
     }
 
     @Transactional
@@ -86,11 +70,12 @@ public class AuthorizationService {
         String refreshToken = jwtService.generateRefreshToken(appUser);
         appUser.setRefreshToken(refreshToken);
         appUserService.save(appUser);
-        String messageText = String.format(
+        String resetPasswordLink = String.format(
                 "%s%sverify?username=%s&token=%s",
                 baseUrl, resetPasswordUrl, appUser.getUsername(), appUser.getRefreshToken()
         );
-        telegramBotService.processTextMessageByAppUser(appUser, messageText);
+        String author = botTitle;
+        telegramBotService.processTextMessageByAppUser(appUser, author, resetPasswordLink);
         return ResponseEntity.ok("");
     }
 
@@ -109,7 +94,33 @@ public class AuthorizationService {
         appUser.setPassword(passwordEncoder.encode(registrationRequest.getPassword()));
         appUserService.save(appUser);
         String message = "The password has been updated";
-        telegramBotService.processTextMessageByAppUser(appUser,message);
+        String author = botTitle;
+        telegramBotService.processTextMessageByAppUser(appUser, author, message);
         return ResponseEntity.ok(message);
+    }
+
+
+    protected AppUser authenticate(LoginRequest loginRequest) {
+        AppUser appUser = appUserService.findByUsername(loginRequest.getUsername());
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            loginRequest.getUsername(),
+                            loginRequest.getPassword()
+                    )
+            );
+            return appUser;
+        } catch (Exception e) {
+            throw new AuthorizationCustomException();
+        }
+    }
+
+
+    private AppUser validateRegistrationRequest(RegistrationRequest registrationRequest) {
+        AppUser appUser = appUserService.findByUsername(registrationRequest.getUsername());
+        if (appUser.getPassword() != null) {
+            throw new AuthorizationCustomException("A user with this username is already registered");
+        }
+        return appUser;
     }
 }
