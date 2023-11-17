@@ -12,4 +12,8 @@ public interface AppUserService {
     AppUser findOrSaveAppUser(User telegranUser);
 
     AppUser getAuthenticatedAppUser();
+
+    AppUser findByChatId(Long chatId);
+
+    void updateRoleByUsername(String username, String newRole);
 }

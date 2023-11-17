@@ -8,6 +8,7 @@ import org.telegram.telegrambots.meta.api.objects.User;
 import telegrambotchatgpt.dao.AppUserDAO;
 import telegrambotchatgpt.entities.AppUser;
 import telegrambotchatgpt.exceptions.DataNotFoundException;
+import telegrambotchatgpt.exceptions.InvalidValueException;
 import telegrambotchatgpt.service.repositories.AppUserService;
 
 @RequiredArgsConstructor
@@ -38,6 +39,25 @@ public class AppUserServiceImpl implements AppUserService {
     public AppUser getAuthenticatedAppUser() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         return findByUsername(username);
+    }
+
+    @Override
+    public AppUser findByChatId(Long chatId) {
+        return appUserDAO.findByTelegramUserId(chatId)
+                .orElseThrow(() -> new DataNotFoundException("User with " + chatId));
+    }
+
+    @Transactional
+    @Override
+    public void updateRoleByUsername(String username, String newRole) {
+        try {
+            AppUser appUser = findByUsername(username);
+            AppUser.Roles role = AppUser.Roles.valueOf(newRole.toUpperCase());
+            appUser.setRole(role);
+            save(appUser);
+        } catch (IllegalArgumentException e) {
+            throw new InvalidValueException("Invalid role");
+        }
     }
 
     private AppUser saveAppUserFromTelegramUser(User user) {

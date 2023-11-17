@@ -29,8 +29,6 @@ public class ChatMessage {
     @Column(name = "message_author", nullable = false)
     private String messageAuthor;
 
-    @Column(name = "chat_id", nullable = false)
-    private Long chatId;
 
     @ManyToOne
     @JoinColumn(name = "user_id")

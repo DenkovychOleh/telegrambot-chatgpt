@@ -1,0 +1,4 @@
+2023-11-17 15:48:02 ERROR TelegramBotService:59 - Error occurred: Error executing org.telegram.telegrambots.meta.api.methods.send.SendMessage query: [400] Bad Request: can't parse entities: Unsupported start tag "div" at byte offset 0
+2023-11-17 15:49:40 ERROR TelegramBotService:59 - Error occurred: Error executing org.telegram.telegrambots.meta.api.methods.send.SendMessage query: [400] Bad Request: can't parse entities: Unsupported start tag "div" at byte offset 0
+2023-11-17 15:57:59 ERROR TelegramBotService:59 - Error occurred: Error executing org.telegram.telegrambots.meta.api.methods.send.SendMessage query: [400] Bad Request: can't parse entities: Unsupported start tag "div" at byte offset 0
+2023-11-17 15:59:00 ERROR TelegramBotService:59 - Error occurred: Error executing org.telegram.telegrambots.meta.api.methods.send.SendMessage query: [400] Bad Request: can't parse entities: Unsupported start tag "div" at byte offset 0

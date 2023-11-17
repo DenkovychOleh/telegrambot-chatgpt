@@ -1,6 +1,7 @@
 package telegrambotchatgpt.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -12,6 +13,7 @@ import telegrambotchatgpt.dto.authorization.request.RegistrationRequest;
 import telegrambotchatgpt.dto.jwt.AuthenticationResponse;
 import telegrambotchatgpt.entities.AppUser;
 import telegrambotchatgpt.exceptions.AuthorizationCustomException;
+import telegrambotchatgpt.exceptions.JwtCustomException;
 import telegrambotchatgpt.service.jwt.JwtService;
 import telegrambotchatgpt.service.repositories.AppUserService;
 
@@ -23,6 +25,14 @@ public class AuthorizationService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
+    private final TelegramBotService telegramBotService;
+
+
+    @Value("${base.url}")
+    private String baseUrl;
+
+    @Value("${reset-password.url}")
+    private String resetPasswordUrl;
 
     @Transactional
     public ResponseEntity<AuthenticationResponse> login(LoginRequest loginRequest) {
@@ -68,5 +78,38 @@ public class AuthorizationService {
             throw new AuthorizationCustomException("A user with this username is already registered");
         }
         return appUser;
+    }
+
+    @Transactional
+    public ResponseEntity<String> sendResetPasswordMessage(String username) {
+        AppUser appUser = appUserService.findByUsername(username);
+        String refreshToken = jwtService.generateRefreshToken(appUser);
+        appUser.setRefreshToken(refreshToken);
+        appUserService.save(appUser);
+        String messageText = String.format(
+                "%s%sverify?username=%s&token=%s",
+                baseUrl, resetPasswordUrl, appUser.getUsername(), appUser.getRefreshToken()
+        );
+        telegramBotService.processTextMessageByAppUser(appUser, messageText);
+        return ResponseEntity.ok("");
+    }
+
+    public ResponseEntity<String> verifyResetPassword(String username, String token) {
+        AppUser appUser = appUserService.findByUsername(username);
+        if (appUser.getRefreshToken().equals(token) && !jwtService.isTokenExpired(token)) {
+            return ResponseEntity.ok("Account has verified");
+        } else {
+            throw new JwtCustomException("Token has expired. Please regenerate token and try again");
+        }
+    }
+
+    @Transactional
+    public ResponseEntity<String> resetPassword(RegistrationRequest registrationRequest) {
+        AppUser appUser = appUserService.findByUsername(registrationRequest.getUsername());
+        appUser.setPassword(passwordEncoder.encode(registrationRequest.getPassword()));
+        appUserService.save(appUser);
+        String message = "The password has been updated";
+        telegramBotService.processTextMessageByAppUser(appUser,message);
+        return ResponseEntity.ok(message);
     }
 }

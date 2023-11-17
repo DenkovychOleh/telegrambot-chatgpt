@@ -1,21 +1,40 @@
 package telegrambotchatgpt.controllers.pages.admin;
 
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import telegrambotchatgpt.service.repositories.AppUserService;
+import telegrambotchatgpt.service.repositories.ChatMessageService;
 
 @CrossOrigin(origins = "*")
-@AllArgsConstructor
+@RequiredArgsConstructor
 @RequestMapping("/api/v1/admin")
 @RestController
 public class AdminPageController {
 
+    private final ChatMessageService chatMessageService;
+    private final AppUserService appUserService;
+
     @GetMapping("/my-info")
     public ResponseEntity<String> openSecurePage() {
         return ResponseEntity.ok("Hello from admin page");
+    }
+
+    @PutMapping("/username/{username}/update-role/{role}")
+    public ResponseEntity<String> updateRole(
+            @PathVariable(value = "username") String username,
+            @PathVariable(value = "role") String newRole) {
+        appUserService.updateRoleByUsername(username, newRole);
+        return ResponseEntity.ok("User's role has been updated.");
+    }
+
+    @GetMapping("/chat/username/{username}")
+    public ResponseEntity<String> getChatByUsername(@PathVariable(value = "username") String username) {
+        return ResponseEntity.ok(chatMessageService.getChatByUsername(username));
+    }
+
+    @GetMapping("/chat-json/username/{username}")
+    public ResponseEntity<String> getJsonChatByUsername(@PathVariable(value = "username") String username) {
+        return ResponseEntity.ok(chatMessageService.getChatByUsername(username));
     }
 }

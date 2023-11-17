@@ -6,10 +6,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import telegrambotchatgpt.exceptions.AuthorizationCustomException;
-import telegrambotchatgpt.exceptions.DataNotFoundException;
-import telegrambotchatgpt.exceptions.InsufficientPermissionsException;
-import telegrambotchatgpt.exceptions.JwtCustomException;
+import telegrambotchatgpt.exceptions.*;
 
 import java.util.HashMap;
 import java.util.List;
@@ -47,6 +44,13 @@ public class ApplicationExceptionHandler {
     public Map<String, String> handleAuthorizationCustomException(AuthorizationCustomException exception) {
         return createErrorResponse(exception.getMessage());
     }
+
+    @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
+    @ExceptionHandler(InvalidValueException.class)
+    public Map<String, String> handleInvalidValueException(InvalidValueException exception) {
+        return createErrorResponse(exception.getMessage());
+    }
+
 
     private Map<String, String> createErrorResponse(String errorMessage) {
         Map<String, String> errorMap = new HashMap<>();

@@ -26,4 +26,19 @@ public class AuthorizationPageController {
     public ResponseEntity<AuthenticationResponse> login(@RequestBody LoginRequest loginRequest) {
         return authorizationService.login(loginRequest);
     }
+
+    @PostMapping("/reset-password/{username}")
+    public ResponseEntity<String> sendResetPasswordMessage(@PathVariable String username) {
+        return authorizationService.sendResetPasswordMessage(username);
+    }
+
+    @GetMapping("/reset-password/verify")
+    public ResponseEntity<String> verifyResetPassword(@RequestParam String username, @RequestParam String token){
+        return authorizationService.verifyResetPassword(username, token);
+    }
+
+    @PutMapping("/reset-password")
+    public ResponseEntity<String> resetPassword(@RequestBody RegistrationRequest registrationRequest){
+        return authorizationService.resetPassword(registrationRequest);
+    }
 }

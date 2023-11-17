@@ -25,25 +25,4 @@ public class MainPageController {
     public ResponseEntity<String> getRole() {
         return ResponseEntity.ok(appUserService.getAuthenticatedAppUser().getRole().name());
     }
-
-    @PutMapping("/update-role/{status}")
-    public ResponseEntity<String> updateRole(@PathVariable("status") String newRole) {
-        try {
-            AppUser authenticatedAppUser = appUserService.getAuthenticatedAppUser();
-            AppUser.Roles role = AppUser.Roles.valueOf(newRole.toUpperCase());
-            authenticatedAppUser.setRole(role);
-            appUserService.save(authenticatedAppUser);
-            return ResponseEntity.ok("User's role has been updated. New role " + role);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body("Invalid role");
-        }
-    }
-
-
-    @GetMapping("/my-authentication")
-    public ResponseEntity<String> getAuthentication() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String s = "Authorities: " + authentication.getAuthorities();
-        return ResponseEntity.ok(s);
-    }
 }

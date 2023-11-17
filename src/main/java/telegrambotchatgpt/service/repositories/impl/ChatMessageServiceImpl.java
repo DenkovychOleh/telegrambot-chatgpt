@@ -11,6 +11,9 @@ import telegrambotchatgpt.service.repositories.AppUserService;
 import telegrambotchatgpt.service.repositories.ChatMessageService;
 
 import java.time.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 
 @RequiredArgsConstructor
 @Service
@@ -26,6 +29,22 @@ public class ChatMessageServiceImpl implements ChatMessageService {
         chatMessageDAO.save(chatMessage);
     }
 
+    @Override
+    public String getChatByUsername(String username) {
+        AppUser appUser = appUserService.findByUsername(username);
+        Optional<List<ChatMessage>> chatMessageByAppUser = chatMessageDAO.findAllByUser(appUser);
+        List<ChatMessage> chatMessages = chatMessageByAppUser.orElse(Collections.emptyList());
+        return buildChatString(chatMessages);
+    }
+
+    private String buildChatString(List<ChatMessage> chatMessages) {
+        StringBuilder stringBuilder = new StringBuilder();
+        chatMessages.forEach(chatMessage ->
+                stringBuilder.append(String.format("%s %s: %s%n", chatMessage.getMessageTime(), chatMessage.getMessageAuthor(), chatMessage.getMessage()))
+        );
+        return stringBuilder.toString().isEmpty() ? "The chat is empty" : stringBuilder.toString();
+    }
+
     @Transactional
     @Override
     public void saveChatMessage(Message message) {
@@ -35,17 +54,18 @@ public class ChatMessageServiceImpl implements ChatMessageService {
 
     @Transactional
     @Override
-    public void saveGptResponseMessage(Long chatId, String message) {
-        ChatMessage chatMessage = buildChatMessageFromGptResponseMessage(chatId, message);
+    public void saveGptResponseMessage(Long chatId, String message, String author) {
+        AppUser appUserByChatId = appUserService.findByChatId(chatId);
+        ChatMessage chatMessage = buildChatMessageFromGptResponseMessage(appUserByChatId, message, author);
         save(chatMessage);
     }
 
 
-    private ChatMessage buildChatMessageFromGptResponseMessage(Long chatId, String message) {
+    private ChatMessage buildChatMessageFromGptResponseMessage(AppUser appUser, String message, String author) {
         return ChatMessage.builder()
-                .chatId(chatId)
+                .user(appUser)
                 .messageTime(LocalDateTime.now())
-                .messageAuthor("gpt-3.5-turbo")
+                .messageAuthor(author)
                 .message(message)
                 .build();
     }
@@ -53,7 +73,6 @@ public class ChatMessageServiceImpl implements ChatMessageService {
     private ChatMessage buildChatMessageFromMessage(Message message) {
         return ChatMessage.builder()
                 .user(getAppUserFromMessage(message))
-                .chatId(message.getChatId())
                 .messageTime(getMessageTimeFromMessage(message))
                 .messageAuthor(getAppUserFromMessage(message).getUsername())
                 .message(message.getText())

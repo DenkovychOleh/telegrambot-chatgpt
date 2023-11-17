@@ -9,4 +9,6 @@ import java.util.Optional;
 @Repository
 public interface AppUserDAO extends JpaRepository<AppUser, Long> {
     Optional<AppUser> findByUsername(String username);
+
+    Optional<AppUser> findByTelegramUserId(Long chatId);
 }
