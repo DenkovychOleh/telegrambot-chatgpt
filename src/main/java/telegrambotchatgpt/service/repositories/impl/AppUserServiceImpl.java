@@ -6,10 +6,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.telegram.telegrambots.meta.api.objects.User;
 import telegrambotchatgpt.dao.AppUserDAO;
+import telegrambotchatgpt.dto.AppUserDTO;
 import telegrambotchatgpt.entities.AppUser;
 import telegrambotchatgpt.exceptions.DataNotFoundException;
 import telegrambotchatgpt.exceptions.InvalidValueException;
 import telegrambotchatgpt.service.repositories.AppUserService;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
@@ -58,6 +62,46 @@ public class AppUserServiceImpl implements AppUserService {
         } catch (IllegalArgumentException e) {
             throw new InvalidValueException("Invalid role");
         }
+    }
+
+    @Override
+    public List<AppUserDTO> getAppUserListByRole(String role) {
+        List<AppUser> appUsers;
+
+        if (role != null) {
+            AppUser.Roles appUserStatus = parseUserRole(role);
+            appUsers = findAllByRole(appUserStatus);
+        } else {
+            appUsers = appUserDAO.findAll();
+        }
+
+        return appUsers.stream()
+                .map(this::buildAppUserDTOFromAppUser)
+                .collect(Collectors.toList());
+    }
+
+    private AppUser.Roles parseUserRole(String role) {
+        try {
+            return AppUser.Roles.valueOf(role.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new InvalidValueException("Invalid role");
+        }
+    }
+
+    private AppUserDTO buildAppUserDTOFromAppUser(AppUser appUser) {
+        return AppUserDTO.builder()
+                .id(appUser.getId())
+                .username(appUser.getUsername())
+                .role(appUser.getRole().name())
+                .status(appUser.getStatus().name())
+                .build();
+    }
+
+    @Override
+    public List<AppUser> findAllByRole(AppUser.Roles role) {
+        return appUserDAO.findAllByRole(role)
+                .filter(appUser -> !appUser.isEmpty())
+                .orElseThrow(() -> new DataNotFoundException("Users with " + role.name()));
     }
 
     private AppUser saveAppUserFromTelegramUser(User user) {

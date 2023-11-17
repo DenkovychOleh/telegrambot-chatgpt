@@ -1,8 +1,10 @@
 package telegrambotchatgpt.service.repositories;
 
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.telegram.telegrambots.meta.api.objects.User;
+import telegrambotchatgpt.dto.AppUserDTO;
 import telegrambotchatgpt.entities.AppUser;
+
+import java.util.List;
 
 public interface AppUserService {
     AppUser findByUsername(String username);
@@ -16,4 +18,8 @@ public interface AppUserService {
     AppUser findByChatId(Long chatId);
 
     void updateRoleByUsername(String username, String newRole);
+
+    List<AppUserDTO> getAppUserListByRole(String role);
+
+    List<AppUser> findAllByRole(AppUser.Roles roles);
 }

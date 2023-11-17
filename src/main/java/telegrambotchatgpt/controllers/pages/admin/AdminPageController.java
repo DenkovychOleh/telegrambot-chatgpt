@@ -3,8 +3,11 @@ package telegrambotchatgpt.controllers.pages.admin;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import telegrambotchatgpt.dto.AppUserDTO;
 import telegrambotchatgpt.service.repositories.AppUserService;
 import telegrambotchatgpt.service.repositories.ChatMessageService;
+
+import java.util.List;
 
 @CrossOrigin(origins = "*")
 @RequiredArgsConstructor
@@ -33,8 +36,9 @@ public class AdminPageController {
         return ResponseEntity.ok(chatMessageService.getChatByUsername(username));
     }
 
-    @GetMapping("/chat-json/username/{username}")
-    public ResponseEntity<String> getJsonChatByUsername(@PathVariable(value = "username") String username) {
-        return ResponseEntity.ok(chatMessageService.getChatByUsername(username));
+    @GetMapping("/app-users")
+    public ResponseEntity<List<AppUserDTO>> getAppUserList(@RequestParam(value = "role", required = false) String role) {
+        return ResponseEntity.ok(appUserService.getAppUserListByRole(role));
     }
+
 }
