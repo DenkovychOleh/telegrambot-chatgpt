@@ -38,7 +38,7 @@ public class AuthorizationPageController {
     }
 
     @PutMapping("/reset-password")
-    public ResponseEntity<String> resetPassword(@RequestBody RegistrationRequest registrationRequest){
+    public ResponseEntity<String> resetPassword(@RequestBody @Valid RegistrationRequest registrationRequest){
         return authorizationService.resetPassword(registrationRequest);
     }
 }
